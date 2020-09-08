@@ -4,6 +4,7 @@ const app =express();
 const monogoose =require('mongoose');
 const cors =require('cors')
 var bodyParser = require('body-parser');
+const portNumber=5000;
 require('dotenv/config');
 //Middelware
 app.use(cors());
@@ -31,4 +32,4 @@ monogoose.connect(process.env.DB_CONNECTION,
 );
 
 //listen
-app.listen(5000);
+app.listen(portNumber, () => console.info(`Server listening at http://localhost:${portNumber}/`));

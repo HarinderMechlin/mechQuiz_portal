@@ -43,7 +43,6 @@ async function logInApi(req, res) {
                             status: true
                         }
                     });
-
                     res.json({
                         data: resUser,
                         status: true,
@@ -64,8 +63,11 @@ async function logInApi(req, res) {
                         token: token
                     })
                 }
+               
+            }else{
                 res.send({
-                    status: false
+                    status: false,
+                    msg: "invalid credentials"
                 })
             }
 
@@ -81,7 +83,9 @@ async function logInApi(req, res) {
         })
     }
 }
-
+/**
+FOR SIGNUP DATA
+**/
 async function signUpApi(req, res) {
     try {
         let savedUser;
