@@ -88,12 +88,15 @@ FOR SIGNUP DATA
 **/
 async function signUpApi(req, res) {
     try {
+        console.log("Step-1-",req.body);
+        
         let savedUser;
         let password;
         if (req.body.password == req.body.confirmPassword) {
             password = req.body.password;
         } else {
-            res.send({
+            console.log('coming....');
+            res.json({
                 status: false,
                 msg: "password is not matched"
             })
@@ -206,6 +209,7 @@ async function forgotPasswordApi(req, res) {
                     }
                     console.log("coming....", tokenObj);
                     email.sendEmail(tokenObj)
+                    console.log("email....", email);
                     res.status(200).json({
                         status: true,
                         data: checkEmail
@@ -247,19 +251,21 @@ async function forgotPasswordApi(req, res) {
 
 async function getProfileDatabyId(req, res) {
     try {
+      
         let savedPost;
-        if (req.body.purpose == "Doctor") {
-            if (req.body.id) {
+        if (req.query.purpose == "Doctor") {
+            console.log(req.query);
+            if (req.query.id) {
                 savedPost = await Doctor.find({
-                    _id: req.body.id
+                    _id: req.query.id
                 });
             } else {
                 savedPost = await Doctor.find();
             }
         } else {
-            if (req.body.id) {
+            if (req.query.id) {
                 savedPost = await Patient.find({
-                    _id: req.body.id
+                    _id: req.query.id
                 });
 
             } else {
@@ -347,10 +353,11 @@ UPDATE PROFILE OF USER
 async function updateProfileApi(req, res) {
     try {
         let getDocdata;
+        let userId=req.body.id?req.body.id:req.body._id
         if (req.body.purpose == "Doctor") {
-            if (req.body.id) {
+            if (userId) {
                 getDocdata = await Doctor.updateOne({
-                    _id: req.body.id
+                    _id: userId
                 }, {
                     $set: {
                         firstname: req.body.firstname,
@@ -372,10 +379,11 @@ async function updateProfileApi(req, res) {
                 })
             }
         } else {
-            if (req.body.id) {
-                console.log(req.body.id);
+
+            if (userId) {
+                console.log('id',userId);
                 getPatdata = await Patient.updateOne({
-                    _id: req.body.id
+                    _id: userId
                 }, {
                     $set: {
                         firstname: req.body.firstname,
