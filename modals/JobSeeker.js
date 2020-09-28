@@ -44,6 +44,10 @@ const JobSeekerSchema = monogoose.Schema({
     type: Boolean,
     required: true,
   },
+  status: {
+    type: Boolean,
+    required: true,
+  },
   date: {
     type: Date,
     default: Date.now,

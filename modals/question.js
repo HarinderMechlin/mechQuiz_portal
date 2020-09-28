@@ -40,6 +40,6 @@ const questionSchema = monogoose.Schema({
   date: {
     type: Date,
     default: Date.now,
-  },
+  }
 });
 module.exports = monogoose.model("question", questionSchema);

@@ -4,17 +4,17 @@ const controller = require("../controller/common");
 const JWT = require('../utils/auth');
 const email = require('../utils/email');
 
-// Hr/admin deatils
+// Hr/admin Deatils
 router.post('/hrLogin', controller.hrLogin);
-//Candidate deatils
-// router.post('/addCandidateInfo',  JWT.authenticate,controller.addCandidateInfo);
-// router.put('/updateCandidateInfo/:id',   JWT.authenticate,controller.updateCandidateInfo);
-// router.delete('/deleteCandidateInfo/:id',  JWT.authenticate, controller.deleteCandidateInfo);
-// router.get('/getCandidateInfo/:id',   JWT.authenticate,controller.getCandidateInfo);
-// router.get('/getCandidateInfo',   JWT.authenticate,controller.getCandidateInfo);
-// //Question & Answer with xlxs and csv
+//JobSeeker Deatils
+ router.post('/addJobSeekerInfo', controller.addJobSeekerInfo);
+ router.put('/updateJobSeekerInfo/:id',controller.updateJobSeekerInfo);
+router.delete('/deleteJobSeekerInfo/:id',   controller.deleteJobSeekerInfo);
+router.get('/getJobSeekerInfo/:id',controller.getJobSeekerInfo);
+ router.get('/getJobSeekerInfo', controller.getJobSeekerInfo);
+ //Question & Answer with xlxs and csv
 // router.post('/uploadQuestionSheet',  JWT.authenticate, controller.uploadQuestionSheet);
-// router.post('/addSingleQuestion',  JWT.authenticate, controller.addSingleQuestion);
+ router.post('/addSingleQuestion', controller.addSingleQuestion);
 // router.get('/getQuestion/:id',   JWT.authenticate,controller.getQuestion);
 // router.get('/getQuestion',   JWT.authenticate, controller.getQuestion);
 // router.put('/updateQuestion/:id',  JWT.authenticate, controller.updateQuestion);
