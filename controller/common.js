@@ -9,79 +9,60 @@ const email = require('../utils/email')
 /**
 GET SIGNIN DATA WITH JWT AUTH
 **/
-async function logInApi(req, res) {
-    try {
-        let resUser;
-        let loginInData = {
-            email: req.body.email,
-            password: req.body.password,
-        }
-        if (req.body.purpose == "Doctor") {
-            resUser = await Doctor.findOne({
-                email: loginInData.email
-            });
-        } else {
-            resUser = await Patient.findOne({
-                email: loginInData.email
-            });
-        }
-        if (resUser !== null) {
-
-            let comPass = await bcrypt.compare(loginInData.password, resUser.password);
-            if (comPass) {
-                const user = {
-                    id: resUser._id
-                }
-                const token = jwt.sign(user, accessTokenSecret, {
-                    expiresIn: '20m'
-                });
-                if (req.body.purpose == "Doctor") {
-                    await Doctor.updateOne({
-                        _id: resUser._id
-                    }, {
-                        $set: {
-                            status: true
-                        }
-                    });
-                    res.json({
-                        data: resUser,
-                        status: true,
-                        token: token
-                    })
-                } else {
-                    await Patient.updateOne({
-                        _id: resUser._id
-                    }, {
-                        $set: {
-                            status: true
-                        }
-                    });
-
-                    res.json({
-                        data: resUser,
-                        status: true,
-                        token: token
-                    })
-                }
-               
-            }else{
-                res.send({
-                    status: false,
-                    msg: "invalid credentials"
-                })
-            }
-
-        } else {
-            res.send({
-                status: false,
-                msg: "user not exist"
-            })
-        }
-    } catch (err) {
+async function hrLogin(req, res) {
+  try {
+    let resUser;
+    let loginInData = {
+      email: req.body.email,
+      password: req.body.password,
+    };
+    resUser = await Patient.findOne({
+      email: loginInData.email,
+    });
+    if (resUser !== null) {
+      let comPass = await bcrypt.compare(
+        loginInData.password,
+        resUser.password
+      );
+      if (comPass) {
+        const user = {
+          id: resUser._id,
+        };
+        const token = jwt.sign(user, accessTokenSecret, {
+          expiresIn: "20m",
+        });
+        await Patient.updateOne(
+          {
+            _id: resUser._id,
+          },
+          {
+            $set: {
+              status: true,
+            },
+          }
+        );
         res.json({
-            message: err
-        })
+          data: resUser,
+          status: true,
+          token: token,
+        });
+      } else {
+        res.send({
+          status: false,
+          msg: "invalid credentials",
+        });
+      }
+    } else {
+      res.send({
+        status: false,
+        msg: "user not exist",
+      });
     }
+  } catch (err) {
+    res.json({
+      message: err,
+    });
+  }
 }
 /**
 FOR SIGNUP DATA
@@ -248,6 +229,7 @@ async function forgotPasswordApi(req, res) {
         })
     }
 }
+
 
 async function getProfileDatabyId(req, res) {
     try {
@@ -493,7 +475,7 @@ async function resetPasswordApi(req, res) {
 
 module.exports = {
     signUpApi,
-    logInApi,
+    hrLogin,
     checkDuplicateEmailApi,
     resetPasswordApi,
     forgotPasswordApi,
