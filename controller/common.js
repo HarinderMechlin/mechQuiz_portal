@@ -13,7 +13,7 @@ const fs = require("fs");
 const { v4: uuidv4 } = require('uuid');
 const csv = require('csv-parser');
 const crptoKey = "secret_key_123"
-const saltRounds = 10;
+//const saltRounds = 10;
 const url = process.env.URL;
 const email = require("../utils/email");
 /**
@@ -141,7 +141,7 @@ async function getQuestion(req, res) {
 			})
 		} else {
 			res.json({
-				msg: "question_id not exist",
+				msg: "Sorry, no result found.",
 				status: false,
 			})
 		}
@@ -534,12 +534,45 @@ async function addJobSeekerFinalResult(req, res) {
 	try {
 		let jsId = req.body.job_seeker_id
 		let savedUser;
+		let getJSData;
+		let total_question;
+		let getData = {
+			job_seeker_id: jsId,
+			totalAttemptedQuestionArr: req.body.totalAttemptedQuestion
+		}
+		let k = 0;
+		let j = 0;
+		let wrong_answer = "";
+		let correct_answer = "";
+		total_question = getData.totalAttemptedQuestionArr.length;
+		console.log(getData.totalAttemptedQuestionArr.length);
+		for (i = 0; i < getData.totalAttemptedQuestionArr.length; i++) {
+
+			console.log(getData.totalAttemptedQuestionArr[i]);
+			getJSData = await Answer.findOne({
+				question_id: getData.totalAttemptedQuestionArr[i].question_id
+			}, { "correctAnswer": 1 });
+
+			console.log(getJSData);
+
+			if (getJSData.correctAnswer === getData.totalAttemptedQuestionArr[i].attemptedAnswer) {
+				let passVal = k++;
+				correct_answer = passVal + 1;
+
+			} else {
+				let wrongAnswer = j++;
+				wrong_answer = wrongAnswer + 1;
+
+			}
+
+		}
+
 		if (jsId) {
 			const JSFinalResult = new ResultsSchema({
 				job_seeker_id: jsId,
-				total_question: req.body.total_question,
-				wrong_answer: req.body.wrong_answer,
-				correct_answer: req.body.correct_answer
+				total_question: total_question,
+				wrong_answer: wrong_answer ? wrong_answer : 0,
+				correct_answer: correct_answer ? correct_answer : 0
 			});
 			savedUser = await JSFinalResult.save();
 			await JobSeekerCredential.updateOne({
@@ -586,30 +619,20 @@ async function checkCandidateLoginCredentials(req, res) {
 		resUser = await JobSeekerCredential.findOne({
 			job_seeker_id: loginInData.job_seeker_id
 		});
-		console.log('########', resUser);
-
 		if (resUser !== null) {
-			// Decrypt
-			//var ss = CryptoJS.AES.encrypt(JSON.stringify(resUser.password), crptoKey).toString();
 			var bytes = CryptoJS.AES.decrypt(resUser.password, crptoKey);
 			var decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-			console.log(decryptedData);
-
 			if (loginInData.password == decryptedData && loginInData.username == resUser.username) {
-
 				res.send({
 					status: true,
 					data: resUser,
 				});
-
-				console.log('com');
 			} else {
 				res.send({
 					status: false,
 					msg: "invalid credentials",
 				});
 			}
-
 		} else {
 			res.send({
 				status: false,
@@ -639,7 +662,6 @@ async function checkCandidateLoginCredentials(req, res) {
 		});
 		if (resUser !== null) {
 			// Decrypt
-			//var ss = CryptoJS.AES.encrypt(JSON.stringify(resUser.password), crptoKey).toString();
 			let bytes = CryptoJS.AES.decrypt(resUser.password, crptoKey);
 			let decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
 			console.log(decryptedData);
@@ -677,14 +699,11 @@ async function sendQuizLoginCredentialsViaEmail(req, res) {
 			getData = await JobSeekerCredential.find({
 				job_seeker_id: job_seeker_id
 			});
-
 			if (getData.length > 0) {
 				let userId = getData[0]._id;
 				if (userId) {
 					let bytes = CryptoJS.AES.decrypt(getData[0].password, crptoKey);
 					let decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-					console.log(decryptedData);
-
 					let tokenObj = {
 						emailurl: url + 'mechlin_quiz/login/' + userId,
 						username: getData[0].username,
@@ -693,10 +712,7 @@ async function sendQuizLoginCredentialsViaEmail(req, res) {
 						job_seeker_id, job_seeker_id,
 						subject: 'Mechlin | Quiz Login Credential'
 					}
-					console.log("coming....", tokenObj);
 					email.sendEmail(tokenObj, res)
-					console.log("email....response", email.sendEmail);
-
 				} else {
 					res.json({
 						msg: "job_seeker_id not exist",
@@ -715,8 +731,6 @@ async function sendQuizLoginCredentialsViaEmail(req, res) {
 				status: false
 			})
 		}
-
-
 	} catch (err) {
 		res.json({
 			error: err,

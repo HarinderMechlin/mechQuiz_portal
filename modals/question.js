@@ -37,10 +37,6 @@ const questionSchema = monogoose.Schema({
     type: String,
     required: true
   },
-  answer: {
-    type: monogoose.Schema.Types.ObjectId,
-    ref: "answer"
-  },
   date: {
     type: Date,
     default: Date.now,
