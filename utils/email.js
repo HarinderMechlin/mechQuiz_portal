@@ -5,7 +5,7 @@ const emailSender = "abhishekcdc2020@gmail.com";
 const sendEmail = async function (data, res) {
     try {
         switch (data.purpose) {
-            case 'forgotPassword':
+            case 'quizLoginJS':
                 let html = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
             <html xmlns="http://www.w3.org/1999/xhtml">
             <head>
@@ -89,7 +89,7 @@ const sendEmail = async function (data, res) {
                         <table border="0" cellpadding="0" cellspacing="0" width="480" >
                             <tr>
                                 <td bgcolor="#ff4213" align="left" valign="top" style="padding: 20px 30px 20px 30px; border-radius: 4px 4px 0px 0px; color: #666666; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 400; line-height: 20px;">
-                                    <h1 style="font-size: 18px; font-weight: 700; margin: 0; color: #fff; line-height:22px; letter-spacing: 1px;">Reset password.</h1>
+                                    <h1 style="font-size: 18px; font-weight: 700; margin: 0; color: #fff; line-height:22px; letter-spacing: 1px;">Mechlin Quiz</h1>
                                 </td>
                             </tr>
                         </table>
@@ -102,8 +102,8 @@ const sendEmail = async function (data, res) {
                             <!-- COPY -->
                             <tr>
                                 <td bgcolor="#ffffff" align="left" style="padding: 10px 30px 10px 30px; color: #666666; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 400; line-height: 20px;" >
-                                    <p style="margin-bottom: 10px;">You recently requested to reset your password.<br>Click the button below to reset it.</p>
-                                    <p style="margin: 0; font-style: italic; color: #5599ff;">(If you did not request a password reset,please ignore this email or reply to let us know.)</p>
+                                    <p style="margin-bottom: 10px;"> <br>Username : ${data.username} <br><br>Password : ${data.password} <br> <br> <br>Click the button below to Login.</p>
+                                    <p style="margin: 0; font-style: italic; color: #5599ff;">(If you have any questions regarding the process, don’t hesitate to ask.)</p>
                                 </td>
                             </tr>
                             <!-- BULLETPROOF BUTTON -->
@@ -114,7 +114,7 @@ const sendEmail = async function (data, res) {
                                             <td bgcolor="#ffffff" align="left" style="padding: 10px 30px 30px 30px;">
                                                 <table border="0" cellspacing="0" cellpadding="0">
                                                     <tr>
-                                                        <td align="center" bgcolor="#ff4213" style="border-radius: 4px;"><a href="${data.emailurl}" target="_blank" style="font-size:16px; font-family: Helvetica, Arial, sans-serif; color: #ffffff; text-decoration: none; color: #ffffff; text-decoration: none; padding: 10px 15px; display: inline-block;">Reset Password</a></td>
+                                                        <td align="center" bgcolor="#ff4213" style="border-radius: 4px;"><a href="${data.emailurl}" target="_blank" style="font-size:16px; font-family: Helvetica, Arial, sans-serif; color: #ffffff; text-decoration: none; color: #ffffff; text-decoration: none; padding: 10px 15px; display: inline-block;">Log in</a></td>
                                                     </tr>
                                                 </table>
                                             </td>
@@ -154,7 +154,7 @@ const sendEmail = async function (data, res) {
                                 <!-- ADDRESS -->
                                 <tr>
                                     <td bgcolor="#f4f4f4" align="left" style="padding: 0px 30px 30px 30px; color: #666666; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 18px;" >
-                                        <p style="margin: 0;">Copyright © TotalHousehold PRO 2020.</p>
+                                        <p style="margin: 0;">Copyright © Mechlin 2020.</p>
                                     </td>
                                 </tr>
                             </table>
@@ -184,11 +184,14 @@ const sendEmail = async function (data, res) {
                     subject: data.subject,
                     html: html
                 });
+               
                 console.log("Message sent: %s", info.messageId);
+
                 // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
 
                 // Preview only available when sending through an Ethereal account
                 console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+               
         }
     } catch (error) {
         console.log("email-sending-error", error);

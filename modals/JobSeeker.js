@@ -1,52 +1,56 @@
 const monogoose = require("mongoose");
 
 const JobSeekerSchema = monogoose.Schema({
+  job_seeker_id: {
+    type: String,
+    required: true
+  },
   name: {
     type: String,
-    required: true,
+    required: true
   },
   email: {
     type: String,
   },
   address: {
     type: String,
-    required: true,
+    required: true
   },
   contact: {
     type: String,
-    required: true,
+    required: true
   },
   profile: {
     type: String,
-    required: true,
+    required: true
   },
   experience: {
     type: String,
-    required: true,
+    required: true
   },
   duration: {
     type: String,
-    required: true,
+    required: true
   },
   isQuizRequired: {
     type: Boolean,
-    required: true,
+    required: true
   },
   quizMailReceived: {
     type: Boolean,
-    required: true,
+    required: true
   },
   testGiven: {
     type: Boolean,
-    required: true,
+    required: true
   },
   resultMailReceived: {
     type: Boolean,
-    required: true,
+    required: true
   },
   status: {
     type: Boolean,
-    required: true,
+    required: true
   },
   date: {
     type: Date,

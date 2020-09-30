@@ -1,0 +1,4 @@
+Question_content,Ans1,Ans2,Ans3,Ans4,Difficulty,Category,IsMutipleSelection,CorrectAnswer
+_______ is the process of finding errors and fixing them within a program.,Compiling,Executing,Debugging,Scanning,Low,Computer networking,yes,Executing
+Sal needs to execute a section of code ten times within a program. Compare the selection structures below and select which one meets the needs identified.,If-Else,For,While,If,Medium,C++,yes,While
+Kim has just constructed her first for loop within the Java language.  Which of the following is not a required part of a for loop?,Initialization,Condition,Variable,increment,Low,Computer networking,yes,increment

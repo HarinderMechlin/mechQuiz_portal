@@ -3,39 +3,43 @@ const monogoose = require("mongoose");
 const questionSchema = monogoose.Schema({
   question_id: {
     type: String,
-    required: true,
+    required: true
   },
-  dificulty: {
+  difficulty: {
     type: String,
-    required: true,
+    required: true
   },
   category: {
     type: String,
-    required: true,
+    required: true
   },
   isMutipleSelection: {
     type: String,
-    required: true,
+    required: true
   },
   question_content: {
     type: String,
-    required: true,
+    required: true
   },
   ans1: {
     type: String,
-    required: true,
+    required: true
   },
   ans2: {
     type: String,
-    required: true,
+    required: true
   },
   ans3: {
     type: String,
-    required: true,
+    required: true
   },
   ans4: {
     type: String,
-    required: true,
+    required: true
+  },
+  answer: {
+    type: monogoose.Schema.Types.ObjectId,
+    ref: "answer"
   },
   date: {
     type: Date,

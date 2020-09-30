@@ -1,32 +1,29 @@
 const monogoose = require("mongoose");
 
-const jobSeekerCredentialSchema = monogoose.Schema({
+const jscSchema = monogoose.Schema({
   job_seeker_id: {
     type: String,
-    required: true,
+    required: true
   },
   username: {
     type: String,
-    required: true,
+    required: true
   },
   password: {
     type: String,
-    required: true,
+    required: true
   },
   expireOn: {
-    type: Date,
-    required: true,
+    type: String,
+    required: true
   },
   isExpired: {
     type: Boolean,
-    required: true,
+    required: true
   },
   date: {
     type: Date,
     default: Date.now,
   },
 });
-module.exports = monogoose.model(
-  "Job_seeker_credential",
-  jobSeekerCredentialSchema
-);
+module.exports = monogoose.model("job_seeker_credential", jscSchema);
