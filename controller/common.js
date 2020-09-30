@@ -73,157 +73,7 @@ async function hrLogin(req, res) {
 		});
 	}
 }
-/**
-FOR ADD JOB SEEKER
-**/
-async function addJobSeekerInfo(req, res) {
-	try {
-		let savedUser;
-		const jobSeeker = new JobSeeker({
-			job_seeker_id: uuidv4(),
-			name: req.body.name,
-			email: req.body.email,
-			address: req.body.address,
-			contact: req.body.contact,
-			profile: req.body.profile,
-			experience: req.body.experience,
-			duration: req.body.duration,
-			isQuizRequired: req.body.isQuizRequired,
-			quizMailReceived: req.body.quizMailReceived,
-			testGiven: req.body.testGiven,
-			resultMailReceived: req.body.resultMailReceived,
-			status: req.body.status
-		});
-		savedUser = await jobSeeker.save();
-		if (savedUser.isQuizRequired === true || savedUser.isQuizRequired === "true") {
-			let randomNumber = savedUser.contact ? savedUser.contact * 2 + 4 : savedUser.experience * 12 + 6;
-			let password = "Mechlin@_" + randomNumber;
-			var data = [{ id: 1 }, { id: 2 }]
 
-			// Encrypt
-			var ss = CryptoJS.AES.encrypt(JSON.stringify(password), crptoKey).toString();
-
-			// // Decrypt
-			var bytes = CryptoJS.AES.decrypt(ss, crptoKey);
-			var decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-
-			console.log(decryptedData); // [{id: 1}, {id: 2}]
-
-			//To add 2 days to current date
-			const jsc = new JobSeekerCredential({
-				job_seeker_id: savedUser.job_seeker_id,
-				username: savedUser.email,
-				password: CryptoJS.AES.encrypt(JSON.stringify(password), crptoKey).toString(),
-				expireOn: new Date(new Date().getTime() + (2 * 24 * 60 * 60 * 1000)),
-				isExpired: false
-			})
-			await jsc.save();
-
-		}
-		res.json({
-			status: true,
-			data: savedUser,
-		});
-	} catch (err) {
-		res.json({
-			message: err,
-		});
-	}
-}
-/**
-FOR UPDATE  JOB SEEKER
-**/
-async function updateJobSeekerInfo(req, res) {
-	try {
-
-		let userId = req.params.id
-		let getPatdata;
-		if (userId) {
-			getPatdata = await JobSeeker.updateOne({
-				_id: userId
-			}, {
-				$set: {
-					name: req.body.name,
-					email: req.body.email,
-					address: req.body.address,
-					contact: req.body.contact,
-					profile: req.body.profile,
-					experience: req.body.experience,
-					duration: req.body.duration,
-					isQuizRequired: req.body.isQuizRequired,
-					quizMailReceived: req.body.quizMailReceived,
-					testGiven: req.body.testGiven,
-					resultMailReceived: req.body.resultMailReceived,
-					status: req.body.status
-				}
-			});
-			res.json({
-				status: true,
-				data: getPatdata
-			})
-		} else {
-			res.json({
-				status: false
-			})
-		}
-	} catch (err) {
-		res.json({
-			message: err
-		})
-	}
-}
-/**
-DELETE JOB SEEKER
-**/
-async function deleteJobSeekerInfo(req, res) {
-	try {
-
-		let userId = req.params.id
-		let getPatdata;
-		if (userId) {
-			getPatdata = await JobSeeker.findOneAndDelete({
-				_id: userId
-
-			});
-			res.json({
-				status: true,
-				data: getPatdata
-			})
-		} else {
-			res.json({
-				status: false
-			})
-		}
-	} catch (err) {
-		res.json({
-			message: err
-		})
-	}
-}
-/**
-GET JOB SEEKER
-**/
-async function getJobSeekerInfo(req, res) {
-	try {
-		let userId = req.params.id;
-		let getData;
-		if (userId) {
-			getData = await JobSeeker.find({
-				_id: userId
-			});
-		} else {
-			getData = await JobSeeker.find();
-		}
-		res.json({
-			status: true,
-			data: getData
-		})
-	} catch (err) {
-		res.json({
-			message: err
-		})
-	}
-}
 /**
 FOR ADD SINGLE QUESTION
 **/
@@ -247,10 +97,18 @@ async function addSingleQuestion(req, res) {
 			correctAnswer: req.body.correctAnswer,
 		})
 		savedUser = await answer.save();
-		res.json({
-			status: true,
-			data: savedUser,
-		});
+		if (savedUser) {
+			res.json({
+				status: true,
+				data: savedUser,
+			});
+		} else {
+			res.json({
+				msg: "Something is wrong",
+				status: false
+			})
+		}
+
 	} catch (err) {
 		res.json({
 			message: err,
@@ -262,13 +120,12 @@ GET QUESTION DETAILS
 **/
 async function getQuestion(req, res) {
 	try {
-		let userId = req.params.id;
+		let question_id = req.params.id;
 		let getdifficultyData = req.query.difficulty;
-
 		let getData;
-		if (userId) {
+		if (question_id) {
 			getData = await Question.find({
-				_id: userId
+				question_id: question_id
 			});
 		} else if (getdifficultyData) {
 			getData = await Question.find({
@@ -277,7 +134,6 @@ async function getQuestion(req, res) {
 		} else {
 			getData = await Question.find();
 		}
-
 		if (getData.length) {
 			res.json({
 				status: true,
@@ -285,11 +141,10 @@ async function getQuestion(req, res) {
 			})
 		} else {
 			res.json({
+				msg: "question_id not exist",
 				status: false,
-
 			})
 		}
-
 	} catch (err) {
 		res.json({
 			message: err
@@ -302,11 +157,11 @@ FOR UPDATE QUESTION
 async function updateQuestion(req, res) {
 	try {
 
-		let userId = req.params.id
+		let question_id = req.params.id
 		let getPatdata;
-		if (userId) {
+		if (question_id) {
 			getPatdata = await Question.updateOne({
-				_id: userId
+				question_id: question_id
 			}, {
 				$set: {
 					"difficulty": req.body.difficulty,
@@ -320,7 +175,7 @@ async function updateQuestion(req, res) {
 				}
 			});
 			getPatdata = await Answer.updateOne({
-				_id: userId
+				question_id: question_id
 			}, {
 				$set: {
 					"correctAnswer": req.body.correctAnswer,
@@ -332,6 +187,7 @@ async function updateQuestion(req, res) {
 			})
 		} else {
 			res.json({
+				msg: "question_id not exist",
 				status: false
 			})
 		}
@@ -369,6 +225,7 @@ async function deleteQuestion(req, res) {
 			}
 		} else {
 			res.json({
+				msg: "question_id not exist",
 				status: false
 			})
 		}
@@ -378,7 +235,154 @@ async function deleteQuestion(req, res) {
 		})
 	}
 }
+/**
+FOR ADD JOB SEEKER
+**/
+async function addJobSeekerInfo(req, res) {
+	try {
+		let savedUser;
+		const jobSeeker = new JobSeeker({
+			job_seeker_id: uuidv4(),
+			name: req.body.name,
+			email: req.body.email,
+			address: req.body.address,
+			contact: req.body.contact,
+			profile: req.body.profile,
+			experience: req.body.experience,
+			duration: req.body.duration,
+			isQuizRequired: req.body.isQuizRequired,
+			quizMailReceived: req.body.quizMailReceived,
+			testGiven: req.body.testGiven,
+			resultMailReceived: req.body.resultMailReceived,
+			status: req.body.status
+		});
+		savedUser = await jobSeeker.save();
+		if (savedUser.isQuizRequired === true || savedUser.isQuizRequired === "true") {
+			let randomNumber = savedUser.contact ? savedUser.contact * 2 + 4 : savedUser.experience * 12 + 6;
+			let password = "Mechlin@_" + randomNumber;
+			//To add 2 days to current date
+			const jsc = new JobSeekerCredential({
+				job_seeker_id: savedUser.job_seeker_id,
+				username: savedUser.email,
+				password: CryptoJS.AES.encrypt(JSON.stringify(password), crptoKey).toString(),
+				expireOn: new Date(new Date().getTime() + (2 * 24 * 60 * 60 * 1000)),
+				isExpired: false
+			})
+			await jsc.save();
 
+		}
+		res.json({
+			status: true,
+			data: savedUser,
+		});
+	} catch (err) {
+		res.json({
+			message: err,
+		});
+	}
+}
+/**
+FOR UPDATE  JOB SEEKER
+**/
+async function updateJobSeekerInfo(req, res) {
+	try {
+		let job_seeker_id = req.params.id
+		let getPatdata;
+		if (job_seeker_id) {
+			getPatdata = await JobSeeker.updateOne({
+				job_seeker_id: job_seeker_id
+			}, {
+				$set: {
+					name: req.body.name,
+					email: req.body.email,
+					address: req.body.address,
+					contact: req.body.contact,
+					profile: req.body.profile,
+					experience: req.body.experience,
+					duration: req.body.duration,
+					isQuizRequired: req.body.isQuizRequired,
+					quizMailReceived: req.body.quizMailReceived,
+					testGiven: req.body.testGiven,
+					resultMailReceived: req.body.resultMailReceived,
+					status: req.body.status
+				}
+			});
+			res.json({
+				status: true,
+				data: getPatdata
+			})
+		} else {
+			res.json({
+				msg: "job_seeker_id not exist",
+				status: false
+			})
+		}
+	} catch (err) {
+		res.json({
+			message: err
+		})
+	}
+}
+/**
+DELETE JOB SEEKER
+**/
+async function deleteJobSeekerInfo(req, res) {
+	try {
+
+		let job_seeker_id = req.params.id
+		let getPatdata;
+		if (job_seeker_id) {
+			getPatdata = await JobSeeker.findOneAndDelete({
+				job_seeker_id: job_seeker_id
+
+			});
+			res.json({
+				status: true,
+				data: getPatdata
+			})
+		} else {
+			res.json({
+				msg: "job_seeker_id not exist",
+				status: false
+			})
+		}
+	} catch (err) {
+		res.json({
+			message: err
+		})
+	}
+}
+/**
+GET JOB SEEKER
+**/
+async function getJobSeekerInfo(req, res) {
+	try {
+		let job_seeker_id = req.params.id;
+		let getData;
+		if (job_seeker_id) {
+			getData = await JobSeeker.find({
+				job_seeker_id: job_seeker_id
+			});
+		} else {
+			getData = await JobSeeker.find();
+		}
+		if (getData) {
+			res.json({
+				status: true,
+				data: getData,
+			});
+		} else {
+			res.json({
+				msg: "Something is wrong",
+				status: false
+			})
+		}
+	} catch (err) {
+		res.json({
+			message: err
+		})
+	}
+}
 //ADD JOB SEEKER DATA
 async function uploadQuestionSheet(req, res) {
 	try {
@@ -420,6 +424,7 @@ async function uploadQuestionSheet(req, res) {
 				})
 			} else {
 				res.json({
+					msg: "Something is wrong",
 					status: false
 				})
 			}
@@ -467,6 +472,7 @@ async function uploadQuestionSheet(req, res) {
 						})
 					} else {
 						res.json({
+							msg: "Something is wrong",
 							status: false
 						})
 					}
@@ -511,6 +517,7 @@ async function addIsQuizRequiredForJobSeeker(req, res) {
 			})
 		} else {
 			res.json({
+				msg: "job_seeker_id not exist",
 				status: false
 			})
 		}
@@ -555,6 +562,7 @@ async function addJobSeekerFinalResult(req, res) {
 			});
 		} else {
 			res.json({
+				msg: "job_seeker_id not exist",
 				status: false,
 			});
 		}
@@ -565,7 +573,7 @@ async function addJobSeekerFinalResult(req, res) {
 	}
 }
 /**
-checkCandidateLoginCredentials
+check Candidate Login Credentials
 **/
 async function checkCandidateLoginCredentials(req, res) {
 	try {
@@ -616,7 +624,7 @@ async function checkCandidateLoginCredentials(req, res) {
 }
 
 /**
-checkCandidateLoginCredentials
+check Candidate Login Credentials
 **/
 async function checkCandidateLoginCredentials(req, res) {
 	try {
@@ -658,64 +666,61 @@ async function checkCandidateLoginCredentials(req, res) {
 		});
 	}
 }
-async function sendQuizLoginCredentialsViaEmail(req,res) {
+/**
+send Quiz Login Credentials Via Email
+**/
+async function sendQuizLoginCredentialsViaEmail(req, res) {
 	try {
-let job_seeker_id =req.body.job_seeker_id 
+		let job_seeker_id = req.body.job_seeker_id
 		if (job_seeker_id) {
-            let getData;
-                getData = await JobSeekerCredential.find({
-                    job_seeker_id: job_seeker_id
-				});
-				
-            if (getData.length > 0) {
-                let userId = getData[0]._id;
-                if (userId) {
+			let getData;
+			getData = await JobSeekerCredential.find({
+				job_seeker_id: job_seeker_id
+			});
+
+			if (getData.length > 0) {
+				let userId = getData[0]._id;
+				if (userId) {
 					let bytes = CryptoJS.AES.decrypt(getData[0].password, crptoKey);
 					let decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
 					console.log(decryptedData);
-	
-                    let tokenObj = {
-                        emailurl: url + 'mechlin_quiz/login/' + userId,
+
+					let tokenObj = {
+						emailurl: url + 'mechlin_quiz/login/' + userId,
 						username: getData[0].username,
-						password:decryptedData,
-						purpose:"quizLoginJS",
-                        subject: 'Mechlin | Quiz Login Credential'
-                    }
-                    console.log("coming....", tokenObj);
-                    email.sendEmail(tokenObj)
-					console.log("email....response",  email.sendEmail);
-					await JobSeeker.updateOne({
-						job_seeker_id: job_seeker_id
-                        }, {
-                            $set: {
-                                quizMailReceived: true
-                            }
-                        });
-                    res.status(200).json({
-                        status: true,
-                        data: getData
-                    });
-                        
-                  }else{
+						password: decryptedData,
+						purpose: "quizLoginJS",
+						job_seeker_id, job_seeker_id,
+						subject: 'Mechlin | Quiz Login Credential'
+					}
+					console.log("coming....", tokenObj);
+					email.sendEmail(tokenObj, res)
+					console.log("email....response", email.sendEmail);
+
+				} else {
 					res.json({
+						msg: "job_seeker_id not exist",
 						status: false
 					})
-				  }
-            } else {
-                res.json({
-                    status: false
-                })
-            }
-        } else {
-            res.json({
-                status: false
-            })
-        }
+				}
+			} else {
+				res.json({
+					msg: "job_seeker_id not exist",
+					status: false
+				})
+			}
+		} else {
+			res.json({
+				msg: "job_seeker_id not exist",
+				status: false
+			})
+		}
 
 
 	} catch (err) {
 		res.json({
-			message: err,
+			error: err,
+			message: 'Internal Server Error'
 		});
 	}
 }

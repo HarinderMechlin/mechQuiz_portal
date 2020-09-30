@@ -1,5 +1,5 @@
 const nodemailer = require("nodemailer");
-
+const JobSeeker = require("../modals/JobSeeker");
 
 const emailSender = "abhishekcdc2020@gmail.com";
 const sendEmail = async function (data, res) {
@@ -186,7 +186,25 @@ const sendEmail = async function (data, res) {
                 });
                
                 console.log("Message sent: %s", info.messageId);
-
+                 if(info.messageId){
+                    await JobSeeker.updateOne({
+						job_seeker_id: data.job_seeker_id
+                        }, {
+                            $set: {
+                                quizMailReceived: true
+                            }
+                        });
+                    res.json({
+                        message:"Mail has been sent",
+                        "status": true,
+                    });
+                        
+                  }else{
+					res.json({
+                        message:"Mail sending falied",
+						"status": false
+					})
+				  }
                 // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
 
                 // Preview only available when sending through an Ethereal account
@@ -194,9 +212,10 @@ const sendEmail = async function (data, res) {
                
         }
     } catch (error) {
-        console.log("email-sending-error", error);
-        res.status(500).json({
-            message: 'Internal Server Error'
+        console.log(res,"email-sending-error", error);
+        res.json({
+            error:error, 
+           message: 'Internal Server Error'
         })
     }
 }
