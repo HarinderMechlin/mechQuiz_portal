@@ -1,6 +1,7 @@
 const monogoose = require("mongoose");
 
 const adminSchema = monogoose.Schema({
+  
   user_name: {
     type: String,
     required: true,

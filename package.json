@@ -23,8 +23,7 @@
   },
   "devDependencies": {},
   "scripts": {
-    "start": "nodemon app.js",
-    "seeduser": "mongoimport --db test --collection users --file ../../seed/user.json --jsonArray"
+    "start": "nodemon app.js"
   },
   "author": "",
   "license": "ISC"

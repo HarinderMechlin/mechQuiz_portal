@@ -10,10 +10,11 @@ var CryptoJS = require("crypto-js");
 const XLSX = require('xlsx');
 const accessTokenSecret = "my_secrect_key";
 const fs = require("fs");
-const { v4: uuidv4 } = require('uuid');
+const {
+	v4: uuidv4
+} = require('uuid');
 const csv = require('csv-parser');
 const crptoKey = "secret_key_123"
-//const saltRounds = 10;
 const url = process.env.URL;
 const email = require("../utils/email");
 /**
@@ -23,20 +24,17 @@ async function hrLogin(req, res) {
 	try {
 		let resUser;
 		let loginInData = {
-			user_name: req.body.user_name,
-			type: req.body.type,
 			email: req.body.email,
-			password: req.body.password,
+			password: req.body.password
 		};
 		resUser = await Admin.findOne({
 			email: loginInData.email,
 		});
-		if (resUser !== null) {
-			let comPass = await bcrypt.compare(
-				loginInData.password,
-				resUser.password
-			);
-			if (comPass) {
+		if(resUser !== null) {
+			let bytes = CryptoJS.AES.decrypt(resUser.password, crptoKey);
+			let decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+			console.log(resUser.password);
+			if(decryptedData === loginInData.password) {
 				const user = {
 					id: resUser._id,
 				};
@@ -67,13 +65,46 @@ async function hrLogin(req, res) {
 				msg: "user not exist",
 			});
 		}
-	} catch (err) {
+	} catch(err) {
 		res.json({
+			status: false,
 			message: err,
 		});
 	}
 }
 
+
+/**
+FOR  Hr/admin Registration
+**/
+async function hrRegistration(req, res) {
+	try {
+		let savedUser;
+		const admin = new Admin({
+			"user_name": req.body.user_name,
+			"type": req.body.type,
+			"email": req.body.email,
+			"password": CryptoJS.AES.encrypt(JSON.stringify(req.body.password), crptoKey).toString(),
+			"status": true
+		});
+		savedUser = await admin.save();
+		if(savedUser) {
+			res.json({
+				status: true,
+				data: savedUser,
+			});
+		} else {
+			res.json({
+				msg: "Something is wrong",
+				status: false
+			})
+		}
+	} catch(err) {
+		res.json({
+			message: err,
+		});
+	}
+}
 /**
 FOR ADD SINGLE QUESTION
 **/
@@ -97,7 +128,7 @@ async function addSingleQuestion(req, res) {
 			correctAnswer: req.body.correctAnswer,
 		})
 		savedUser = await answer.save();
-		if (savedUser) {
+		if(savedUser) {
 			res.json({
 				status: true,
 				data: savedUser,
@@ -108,8 +139,7 @@ async function addSingleQuestion(req, res) {
 				status: false
 			})
 		}
-
-	} catch (err) {
+	} catch(err) {
 		res.json({
 			message: err,
 		});
@@ -123,18 +153,18 @@ async function getQuestion(req, res) {
 		let question_id = req.params.id;
 		let getdifficultyData = req.query.difficulty;
 		let getData;
-		if (question_id) {
+		if(question_id) {
 			getData = await Question.find({
 				question_id: question_id
 			});
-		} else if (getdifficultyData) {
+		} else if(getdifficultyData) {
 			getData = await Question.find({
 				difficulty: getdifficultyData
 			});
 		} else {
 			getData = await Question.find();
 		}
-		if (getData.length) {
+		if(getData.length) {
 			res.json({
 				status: true,
 				data: getData
@@ -145,7 +175,7 @@ async function getQuestion(req, res) {
 				status: false,
 			})
 		}
-	} catch (err) {
+	} catch(err) {
 		res.json({
 			message: err
 		})
@@ -156,10 +186,9 @@ FOR UPDATE QUESTION
 **/
 async function updateQuestion(req, res) {
 	try {
-
 		let question_id = req.params.id
 		let getPatdata;
-		if (question_id) {
+		if(question_id) {
 			getPatdata = await Question.updateOne({
 				question_id: question_id
 			}, {
@@ -191,13 +220,12 @@ async function updateQuestion(req, res) {
 				status: false
 			})
 		}
-	} catch (err) {
+	} catch(err) {
 		res.json({
 			message: err
 		})
 	}
 }
-
 /**
 DELETE QUESTION
 **/
@@ -206,11 +234,11 @@ async function deleteQuestion(req, res) {
 		//here add/get the Question id
 		let question_id = req.params.id
 		let getPatdata;
-		if (question_id) {
+		if(question_id) {
 			getPatdata = await Question.findOneAndDelete({
 				question_id: question_id
 			});
-			if (getPatdata == null) {
+			if(getPatdata == null) {
 				res.json({
 					status: false
 				})
@@ -229,7 +257,7 @@ async function deleteQuestion(req, res) {
 				status: false
 			})
 		}
-	} catch (err) {
+	} catch(err) {
 		res.json({
 			message: err
 		})
@@ -257,7 +285,7 @@ async function addJobSeekerInfo(req, res) {
 			status: req.body.status
 		});
 		savedUser = await jobSeeker.save();
-		if (savedUser.isQuizRequired === true || savedUser.isQuizRequired === "true") {
+		if(savedUser.isQuizRequired === true || savedUser.isQuizRequired === "true") {
 			let randomNumber = savedUser.contact ? savedUser.contact * 2 + 4 : savedUser.experience * 12 + 6;
 			let password = "Mechlin@_" + randomNumber;
 			//To add 2 days to current date
@@ -269,16 +297,64 @@ async function addJobSeekerInfo(req, res) {
 				isExpired: false
 			})
 			await jsc.save();
-
 		}
 		res.json({
 			status: true,
 			data: savedUser,
 		});
-	} catch (err) {
+	} catch(err) {
 		res.json({
 			message: err,
 		});
+	}
+}
+/**
+add if Quiz is Req
+**/
+async function addIsQuizRequiredForJobSeeker(req, res) {
+	try {
+		//	console.log(req.body);
+		let jsId = req.body.job_seeker_id
+		let getPatdata;
+		let getJSData;
+		if(jsId) {
+			getPatdata = await JobSeeker.updateOne({
+				job_seeker_id: jsId
+			}, {
+				$set: {
+					"isQuizRequired": true,
+				}
+			});
+			getJSData = await JobSeeker.findOne({
+				job_seeker_id: jsId
+			});
+
+			console.log(getJSData);
+			let randomNumber = getJSData.contact ? getJSData.contact * 2 + 4 : getJSData.experience * 12 + 6;
+			let password = "Mechlin@_" + randomNumber;
+			//To add 2 days to current date
+			const jsc = new JobSeekerCredential({
+				job_seeker_id: jsId,
+				username: getJSData.email,
+				password: CryptoJS.AES.encrypt(JSON.stringify(password), crptoKey).toString(),
+				expireOn: new Date(new Date().getTime() + (2 * 24 * 60 * 60 * 1000)),
+				isExpired: false
+			})
+			await jsc.save();
+			res.json({
+				status: true,
+				data: getPatdata
+			})
+		} else {
+			res.json({
+				msg: "job_seeker_id not exist",
+				status: false
+			})
+		}
+	} catch(err) {
+		res.json({
+			message: err
+		})
 	}
 }
 /**
@@ -288,7 +364,7 @@ async function updateJobSeekerInfo(req, res) {
 	try {
 		let job_seeker_id = req.params.id
 		let getPatdata;
-		if (job_seeker_id) {
+		if(job_seeker_id) {
 			getPatdata = await JobSeeker.updateOne({
 				job_seeker_id: job_seeker_id
 			}, {
@@ -317,7 +393,7 @@ async function updateJobSeekerInfo(req, res) {
 				status: false
 			})
 		}
-	} catch (err) {
+	} catch(err) {
 		res.json({
 			message: err
 		})
@@ -328,13 +404,11 @@ DELETE JOB SEEKER
 **/
 async function deleteJobSeekerInfo(req, res) {
 	try {
-
 		let job_seeker_id = req.params.id
 		let getPatdata;
-		if (job_seeker_id) {
+		if(job_seeker_id) {
 			getPatdata = await JobSeeker.findOneAndDelete({
 				job_seeker_id: job_seeker_id
-
 			});
 			res.json({
 				status: true,
@@ -346,7 +420,7 @@ async function deleteJobSeekerInfo(req, res) {
 				status: false
 			})
 		}
-	} catch (err) {
+	} catch(err) {
 		res.json({
 			message: err
 		})
@@ -359,14 +433,14 @@ async function getJobSeekerInfo(req, res) {
 	try {
 		let job_seeker_id = req.params.id;
 		let getData;
-		if (job_seeker_id) {
+		if(job_seeker_id) {
 			getData = await JobSeeker.find({
 				job_seeker_id: job_seeker_id
 			});
 		} else {
 			getData = await JobSeeker.find();
 		}
-		if (getData) {
+		if(getData) {
 			res.json({
 				status: true,
 				data: getData,
@@ -377,7 +451,7 @@ async function getJobSeekerInfo(req, res) {
 				status: false
 			})
 		}
-	} catch (err) {
+	} catch(err) {
 		res.json({
 			message: err
 		})
@@ -386,20 +460,24 @@ async function getJobSeekerInfo(req, res) {
 //ADD JOB SEEKER DATA
 async function uploadQuestionSheet(req, res) {
 	try {
-		if (req.files.db_xlsx) {
+		if(req.files.db_xlsx) {
 			let getExcelFileData = req.files.db_xlsx[0];
-			if (!getExcelFileData) {
+			if(!getExcelFileData) {
 				res.status(400).json({
 					status: false,
 					message: 'You must provide a valid database file in request.'
 				})
 				return false;
 			}
-			let workbook = XLSX.readFile(getExcelFileData.path, { type: 'binary', cellDates: true, dateNF: 'yyyy-dd-mm;@' });
+			let workbook = XLSX.readFile(getExcelFileData.path, {
+				type: 'binary',
+				cellDates: true,
+				dateNF: 'yyyy-dd-mm;@'
+			});
 			let xlxsData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 			let jobSeekers = []
 			let xlsxData;
-			xlxsData.forEach(function (obj) {
+			xlxsData.forEach(function(obj) {
 				let jobSeeker = {};
 				jobSeeker.question_id = uuidv4();
 				jobSeeker.question_content = obj.Question_content;
@@ -412,12 +490,11 @@ async function uploadQuestionSheet(req, res) {
 				jobSeeker.isMutipleSelection = obj.IsMutipleSelection;
 				jobSeeker.correctAnswer = obj.CorrectAnswer;
 				jobSeekers.push(jobSeeker)
-
 			})
 			xlsxData = await Question.insertMany(jobSeekers);
 			await Answer.insertMany(jobSeekers);
 			fs.unlinkSync(getExcelFileData.path);
-			if (xlsxData.length) {
+			if(xlsxData.length) {
 				res.json({
 					data: xlsxData,
 					status: true
@@ -430,7 +507,7 @@ async function uploadQuestionSheet(req, res) {
 			}
 		} else {
 			let getCsvFileData = req.files.db_csv[0];
-			if (!getCsvFileData) {
+			if(!getCsvFileData) {
 				res.status(400).json({
 					status: false,
 					message: 'You must provide a valid database file in request.'
@@ -440,88 +517,39 @@ async function uploadQuestionSheet(req, res) {
 			var jobSeekerCSVdDataArr = [];
 			// open uploaded file
 			const results = [];
-
 			let csvData;
-			fs.createReadStream(getCsvFileData.path)
-				.pipe(csv())
-				.on('data', (data) =>
-					results.push(data)
-				).on('end', async () => {
-
-					results.map((obj) => {
-						let jobSeekerCSVdData = {};
-						jobSeekerCSVdData.question_id = uuidv4();
-						jobSeekerCSVdData.question_content = obj.Question_content;
-						jobSeekerCSVdData.ans1 = obj.Ans1;
-						jobSeekerCSVdData.ans2 = obj.Ans2;
-						jobSeekerCSVdData.ans3 = obj.Ans3;
-						jobSeekerCSVdData.ans4 = obj.Ans4;
-						jobSeekerCSVdData.difficulty = obj.Difficulty;
-						jobSeekerCSVdData.category = obj.Category;
-						jobSeekerCSVdData.isMutipleSelection = obj.IsMutipleSelection;
-						jobSeekerCSVdData.correctAnswer = obj.CorrectAnswer;
-						jobSeekerCSVdDataArr.push(jobSeekerCSVdData)
+			fs.createReadStream(getCsvFileData.path).pipe(csv()).on('data', (data) => results.push(data)).on('end', async() => {
+				results.map((obj) => {
+					let jobSeekerCSVdData = {};
+					jobSeekerCSVdData.question_id = uuidv4();
+					jobSeekerCSVdData.question_content = obj.Question_content;
+					jobSeekerCSVdData.ans1 = obj.Ans1;
+					jobSeekerCSVdData.ans2 = obj.Ans2;
+					jobSeekerCSVdData.ans3 = obj.Ans3;
+					jobSeekerCSVdData.ans4 = obj.Ans4;
+					jobSeekerCSVdData.difficulty = obj.Difficulty;
+					jobSeekerCSVdData.category = obj.Category;
+					jobSeekerCSVdData.isMutipleSelection = obj.IsMutipleSelection;
+					jobSeekerCSVdData.correctAnswer = obj.CorrectAnswer;
+					jobSeekerCSVdDataArr.push(jobSeekerCSVdData)
+				})
+				csvData = await Question.insertMany(jobSeekerCSVdDataArr);
+				await Answer.insertMany(jobSeekerCSVdDataArr);
+				fs.unlinkSync(getCsvFileData.path);
+				if(csvData.length) {
+					res.json({
+						data: csvData,
+						status: true
 					})
-					csvData = await Question.insertMany(jobSeekerCSVdDataArr);
-					await Answer.insertMany(jobSeekerCSVdDataArr);
-					fs.unlinkSync(getCsvFileData.path);
-					if (csvData.length) {
-						res.json({
-							data: csvData,
-							status: true
-						})
-					} else {
-						res.json({
-							msg: "Something is wrong",
-							status: false
-						})
-					}
-				});
-		}
-	} catch (err) {
-		res.json({
-			message: err
-		})
-	}
-}
-
-async function addIsQuizRequiredForJobSeeker(req, res) {
-	try {
-		console.log(req.body);
-		let jsId = req.body.job_seeker_id
-		let getPatdata;
-		let getJSData;
-		if (jsId) {
-			getPatdata = await JobSeeker.updateOne({
-				job_seeker_id: jsId
-			}, {
-				$set: {
-					"isQuizRequired": true,
+				} else {
+					res.json({
+						msg: "Something is wrong",
+						status: false
+					})
 				}
 			});
-			getJSData = await JobSeeker.findOne({
-				job_seeker_id: jsId
-			}, { "email": 1 });
-			//To add 2 days to current date
-			const jsc = new JobSeekerCredential({
-				job_seeker_id: jsId,
-				username: getJSData.email,
-				password: "password",
-				expireOn: new Date(new Date().getTime() + (2 * 24 * 60 * 60 * 1000)),
-				isExpired: false
-			})
-			await jsc.save();
-			res.json({
-				status: true,
-				data: getPatdata
-			})
-		} else {
-			res.json({
-				msg: "job_seeker_id not exist",
-				status: false
-			})
 		}
-	} catch (err) {
+	} catch(err) {
 		res.json({
 			message: err
 		})
@@ -530,7 +558,7 @@ async function addIsQuizRequiredForJobSeeker(req, res) {
 /**
 FOR ADD JOB SEEKER FINAL RESULT
 **/
-async function addJobSeekerFinalResult(req, res) {
+async function checkCandidateResultOutput(req, res) {
 	try {
 		let jsId = req.body.job_seeker_id
 		let savedUser;
@@ -545,29 +573,24 @@ async function addJobSeekerFinalResult(req, res) {
 		let wrong_answer = "";
 		let correct_answer = "";
 		total_question = getData.totalAttemptedQuestionArr.length;
-		console.log(getData.totalAttemptedQuestionArr.length);
-		for (i = 0; i < getData.totalAttemptedQuestionArr.length; i++) {
-
-			console.log(getData.totalAttemptedQuestionArr[i]);
+		//	console.log(getData.totalAttemptedQuestionArr.length);
+		for(i = 0; i < getData.totalAttemptedQuestionArr.length; i++) {
+			//	console.log(getData.totalAttemptedQuestionArr[i]);
 			getJSData = await Answer.findOne({
 				question_id: getData.totalAttemptedQuestionArr[i].question_id
-			}, { "correctAnswer": 1 });
-
-			console.log(getJSData);
-
-			if (getJSData.correctAnswer === getData.totalAttemptedQuestionArr[i].attemptedAnswer) {
+			}, {
+				"correctAnswer": 1
+			});
+			//	console.log(getJSData);
+			if(getJSData.correctAnswer === getData.totalAttemptedQuestionArr[i].attemptedAnswer) {
 				let passVal = k++;
 				correct_answer = passVal + 1;
-
 			} else {
 				let wrongAnswer = j++;
 				wrong_answer = wrongAnswer + 1;
-
 			}
-
 		}
-
-		if (jsId) {
+		if(jsId) {
 			const JSFinalResult = new ResultsSchema({
 				job_seeker_id: jsId,
 				total_question: total_question,
@@ -599,7 +622,7 @@ async function addJobSeekerFinalResult(req, res) {
 				status: false,
 			});
 		}
-	} catch (err) {
+	} catch(err) {
 		res.json({
 			message: err,
 		});
@@ -619,10 +642,10 @@ async function checkCandidateLoginCredentials(req, res) {
 		resUser = await JobSeekerCredential.findOne({
 			job_seeker_id: loginInData.job_seeker_id
 		});
-		if (resUser !== null) {
+		if(resUser !== null) {
 			var bytes = CryptoJS.AES.decrypt(resUser.password, crptoKey);
 			var decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-			if (loginInData.password == decryptedData && loginInData.username == resUser.username) {
+			if(loginInData.password == decryptedData && loginInData.username == resUser.username) {
 				res.send({
 					status: true,
 					data: resUser,
@@ -639,13 +662,12 @@ async function checkCandidateLoginCredentials(req, res) {
 				msg: "user not exist",
 			});
 		}
-	} catch (err) {
+	} catch(err) {
 		res.json({
 			message: err,
 		});
 	}
 }
-
 /**
 check Candidate Login Credentials
 **/
@@ -660,12 +682,11 @@ async function checkCandidateLoginCredentials(req, res) {
 		resUser = await JobSeekerCredential.findOne({
 			job_seeker_id: loginInData.job_seeker_id
 		});
-		if (resUser !== null) {
+		if(resUser !== null) {
 			// Decrypt
 			let bytes = CryptoJS.AES.decrypt(resUser.password, crptoKey);
 			let decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-			console.log(decryptedData);
-			if (loginInData.password == decryptedData && loginInData.username == resUser.username) {
+			if(loginInData.password == decryptedData && loginInData.username == resUser.username) {
 				res.send({
 					status: true,
 					data: resUser,
@@ -682,7 +703,7 @@ async function checkCandidateLoginCredentials(req, res) {
 				msg: "user not exist",
 			});
 		}
-	} catch (err) {
+	} catch(err) {
 		res.json({
 			message: err,
 		});
@@ -694,14 +715,14 @@ send Quiz Login Credentials Via Email
 async function sendQuizLoginCredentialsViaEmail(req, res) {
 	try {
 		let job_seeker_id = req.body.job_seeker_id
-		if (job_seeker_id) {
+		if(job_seeker_id) {
 			let getData;
 			getData = await JobSeekerCredential.find({
 				job_seeker_id: job_seeker_id
 			});
-			if (getData.length > 0) {
+			if(getData.length > 0) {
 				let userId = getData[0]._id;
-				if (userId) {
+				if(userId) {
 					let bytes = CryptoJS.AES.decrypt(getData[0].password, crptoKey);
 					let decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
 					let tokenObj = {
@@ -709,7 +730,8 @@ async function sendQuizLoginCredentialsViaEmail(req, res) {
 						username: getData[0].username,
 						password: decryptedData,
 						purpose: "quizLoginJS",
-						job_seeker_id, job_seeker_id,
+						job_seeker_id,
+						job_seeker_id,
 						subject: 'Mechlin | Quiz Login Credential'
 					}
 					email.sendEmail(tokenObj, res)
@@ -731,7 +753,111 @@ async function sendQuizLoginCredentialsViaEmail(req, res) {
 				status: false
 			})
 		}
-	} catch (err) {
+	} catch(err) {
+		res.json({
+			error: err,
+			message: 'Internal Server Error'
+		});
+	}
+}
+/**
+Get Quiz Question By Exp & Profile
+**/
+async function getQuizQuestionByExpAndProfile(req, res) {
+	try {
+		let job_seeker_id = req.params.id;
+		let getData;
+		if(job_seeker_id) {
+			getData = await JobSeeker.find({
+				job_seeker_id: job_seeker_id
+			});
+		} else {
+			res.json({
+				msg: "job_seeker_id not exist",
+				status: false
+			})
+		}
+		if(getData) {
+			if(getData[0].isQuizRequired === true) {
+				let jobSeekerExp = parseFloat(getData[0].experience + "." + getData[0].duration);
+				//For Fresher...-low Level
+				if(jobSeekerExp <= 1) {
+					//	console.log("For Fresher... -low Level");
+					let getLowLevelData;
+					getLowLevelData = await Question.find({
+						difficulty: "Low",
+						category: getData[0].profile
+					});
+					if(getLowLevelData[0]) {
+						res.json({
+							data: getLowLevelData,
+							msg: "For Fresher Low Level",
+							status: true
+						})
+					} else {
+						res.json({
+							data: getLowLevelData,
+							msg: "For Fresher -Result Not Found",
+							status: false
+						})
+					}
+					//For less experience... -medium Level
+				}
+				if(jobSeekerExp > 1.0 && jobSeekerExp <= 2.0) {
+					let getMediumLevelData;
+					getMediumLevelData = await Question.find({
+						difficulty: "Medium",
+						category: getData[0].profile
+					});
+					if(getMediumLevelData[0]) {
+						res.json({
+							data: getMediumLevelData,
+							msg: "For Less Experience Medium Level",
+							status: true
+						})
+					} else {
+						res.json({
+							data: getMediumLevelData,
+							msg: "For Less Experience-Sorry,Result Not Found",
+							status: false
+						})
+					}
+				}
+				//For more experience... -hard Level
+				if(jobSeekerExp > 2.0) {
+					//	console.log("For more experience... -hard Level");
+					let getHardLevelData;
+					getHardLevelData = await Question.find({
+						difficulty: "Hard",
+						category: getData[0].profile
+					});
+					if(getHardLevelData[0]) {
+						res.json({
+							data: getHardLevelData,
+							msg: "For More Experience High Level",
+							status: true
+						})
+					} else {
+						res.json({
+							data: getHardLevelData,
+							msg: "For More Experience-Sorry,Result Not Found",
+							status: false
+						})
+					}
+				}
+			} else {
+				res.json({
+					msg: "Quiz is not required for job seeker",
+					status: false
+				})
+			}
+		} else {
+			res.json({
+				msg: "Something is wrong",
+				status: false
+			})
+		}
+	} catch(err) {
 		res.json({
 			error: err,
 			message: 'Internal Server Error'
@@ -739,10 +865,11 @@ async function sendQuizLoginCredentialsViaEmail(req, res) {
 	}
 }
 
-
 module.exports = {
+	hrRegistration,
+	getQuizQuestionByExpAndProfile,
 	sendQuizLoginCredentialsViaEmail,
-	addJobSeekerFinalResult,
+	checkCandidateResultOutput,
 	updateQuestion,
 	checkCandidateLoginCredentials,
 	getQuestion,
